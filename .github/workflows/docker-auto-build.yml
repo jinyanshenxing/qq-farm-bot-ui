@@ -1,24 +1,25 @@
 name: Auto Build & Push QQ-Farm-Bot Docker Image (x86/amd64)
 
+# 触发条件：main分支push、tag推送、手动触发
 on:
   push:
     branches: [ main ]
     tags: [ 'v*' ]
-  workflow_dispatch:
+  workflow_dispatch: # 手动触发开关
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      packages: write
-      contents: read
+      packages: write       # 给GHCR推送权限
+      contents: read        # 读取仓库代码权限
 
     steps:
-      # 1. 拉取仓库代码
+      # 1. 拉取仓库代码（含core/Dockerfile）
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. 设置镜像标签
+      # 2. 设置镜像标签（tag打版用tag名，否则latest）
       - name: Set Image Tag
         id: set_tag
         run: |
@@ -29,29 +30,29 @@ jobs:
           fi
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-      # 3. 登录Docker Hub
+      # 3. 登录Docker Hub（需在仓库Secrets配置DOCKER_HUB_USERNAME/DOCKER_HUB_TOKEN）
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      # 4. 登录GHCR
+      # 4. 登录GHCR（GitHub Container Registry）
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ github.actor }}          # 当前触发工作流的用户
+          password: ${{ secrets.GITHUB_TOKEN }} # 自动生成的临时Token
 
-      # 5. 核心修复：移除所有缓存配置，仅基础构建推送
+      # 5. 构建并推送镜像（指定core目录为构建上下文，使用core/Dockerfile）
       - name: Build & Push Docker Image (amd64)
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: true
-          platforms: linux/amd64  # 仅适配x86架构
-          tags: |
+          context: ./core                # 构建上下文：core目录（Dockerfile所在目录）
+          dockerfile: core/Dockerfile    # 明确指定Dockerfile路径
+          push: true                     # 推送到仓库
+          platforms: linux/amd64         # 仅适配x86/amd64架构（兼容大部分服务器）
+          tags: |                        # 镜像标签（双仓库）
             ${{ secrets.DOCKER_HUB_USERNAME }}/qq-farm-bot-ui:${{ steps.set_tag.outputs.tag }}
             ghcr.io/${{ github.repository }}:${{ steps.set_tag.outputs.tag }}
-          # 完全移除缓存配置，避免驱动兼容问题
