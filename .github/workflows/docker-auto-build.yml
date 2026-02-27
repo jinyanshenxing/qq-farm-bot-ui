@@ -47,7 +47,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./Dockerfile                  # 如果你的仓库有 Dockerfile，就用这个；没有就改路径或新建
+          file: core/Dockerfile                  # 如果你的仓库有 Dockerfile，就用这个；没有就改路径或新建
           platforms: linux/amd64,linux/arm64  # 支持常见架构
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
