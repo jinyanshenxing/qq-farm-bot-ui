@@ -41,4 +41,10 @@
       "share.txt"
     ]
   }
+  "pkg": {
+  "targets": [
+    "node14-win-x64"   // ← 专为 Win7 兼容
+  ],
+  "outputPath": "dist"   // 可选，视你的脚本
+}
 }
