@@ -18,7 +18,7 @@ const CONFIG = {
     adminPort: Number(process.env.ADMIN_PORT || 3000), // 管理面板 HTTP 端口
     adminPassword: process.env.ADMIN_PASSWORD || 'admin',
     device_info: {
-        client_version: "1.6.2.18_20260227",
+        client_version: "1.7.0.5_20260306",
         sys_software: 'iOS 26.2.1',
         network: 'wifi',
         memory: '7672',
